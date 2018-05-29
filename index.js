@@ -8,7 +8,47 @@ const { PORT, CLIENT_ORIGIN } = require('./config');
 const { dbConnect } = require('./db-mongoose');
 // const {dbConnect} = require('./db-knex');
 
+const User = require('./models');
+
 const app = express();
+
+const userList = [
+  {
+  userName: "user2",
+  pwd: "abc12345",
+  currentCash: 435,
+  clickValue: 1,
+  employees: [
+    {emp: 0},
+    {trucks: 0},
+    {planes: 0}
+  ]
+},
+{
+  userName: "user3",
+  pwd: "abc12345",
+  currentCash: 1005,
+  clickValue: 1,
+  employees: [
+    {emp: 1},
+    {trucks: 0},
+    {planes: 0}
+  ]
+},
+{
+  userName: "user4",
+  pwd: "abc12345",
+  currentCash: 435001455,
+  clickValue: 4,
+  employees: [
+    {emp: 5},
+    {trucks: 3},
+    {planes: 1}
+  ]
+}
+];
+
+app.use(express.json());
 
 app.use(
   morgan(process.env.NODE_ENV === 'production' ? 'common' : 'dev', {
@@ -21,6 +61,137 @@ app.use(
     origin: CLIENT_ORIGIN
   })
 );
+
+
+app.get('/api/users', (req, res, next) => {
+  return res.json(userList)
+});
+
+app.get('/api/users/:userName', (req, res, next) => {
+  const { userName } = req.params;
+
+  User.findOne({userName: userName})
+    .then(result => {
+      if(result){
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });  
+});
+
+app.post('/api/users/register', (req, res, next) => {
+  const requiredFields = ['userName', 'password', 'userEmail'];
+
+  const missingField = requiredFields.find(field => !(field in req.body));
+
+  if (missingField) {
+    const err = new Error(`Missing '${missingField}' in request body`);
+    err.status = 422;
+    return next(err);
+  }
+
+  const stringFields = ['userName', 'password', 'userEmail'];
+  const nonStringField = stringFields.find(
+    field => field in req.body && typeof req.body[field] !== 'string'
+  );
+
+  if(nonStringField){
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: 'Incorrect field type: expected string',
+      location: nonStringField
+    });
+  }
+
+  const trimmedFields = ['userName', 'password', 'userEmail'];
+  const nonTrimmedField = trimmedFields.find(
+    field => req.body[field].trim() !== req.body[field]);
+
+  if(nonTrimmedField) {
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: 'Cannot start or end with whitespace',
+      location: nonTrimmedField
+    });
+  }
+  const fieldSizes = {
+    userName: {
+      min: 1
+    },
+    password: {
+      min: 8,
+      max: 72
+    },
+    userEmail: {
+      min : 6,
+      max: 72
+    }
+  };
+  const tooSmallField = Object.keys(fieldSizes).find(
+    field =>
+      'min' in fieldSizes[field] &&
+            req.body[field].trim().length < fieldSizes[field].min
+  );
+  const tooLargeField = Object.keys(fieldSizes).find(
+    field =>
+      'max' in fieldSizes[field] &&
+            req.body[field].trim().length > fieldSizes[field].max
+  );
+
+  if (tooSmallField || tooLargeField) {
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: tooSmallField
+        ? `Must be at least ${fieldSizes[tooSmallField]
+          .min} characters long`
+        : `Must be at most ${fieldSizes[tooLargeField]
+          .max} characters long`,
+      location: tooSmallField || tooLargeField
+    });
+  }
+
+  let {userName, password, userEmail } = req.body;
+
+  return User.find({userName})
+    .count()
+    .then(count => {
+      if(count > 0) {
+        return Promise.reject({
+          code: 422,
+          reason: 'ValidationError',
+          message: 'Username already taken',
+          location: 'username'
+        });
+      }
+    })
+    .then(() => {
+      const newUser = {userName, password, userEmail};
+      return User.create(newUser);
+    })
+    .then(result => {
+      return res.status(201).location(`/api/users/${result.id}`).json(result);
+    })
+    .catch(err => {
+      if (err.code === 11000) {
+        err = new Error('The username already exists');
+        err.status = 400;
+      }
+      next(err);
+    });
+
+})
+
+
+
+
+
 
 function runServer(port = PORT) {
   const server = app
