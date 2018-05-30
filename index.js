@@ -81,7 +81,8 @@ app.get('/api/users/:userName', (req, res, next) => {
       }
     })
     .catch(err => {
-      next(err);
+      console.log(err);
+      
     });  
 });
 
@@ -157,7 +158,7 @@ app.post('/api/users', (req, res, next) => {
     });
   }
 
-  let {userName, password, currentCash,} = req.body;
+  let {userName, password, currentCash, careerCash, manualClicks, clickValue, assets} = req.body;
 
   return User.find({userName})
     .count()
@@ -172,7 +173,8 @@ app.post('/api/users', (req, res, next) => {
       }
     })
     .then(() => {
-      const newUser = {userName, password, currentCash};
+      const newUser = {userName, password, currentCash, careerCash, manualClicks, clickValue, assets};
+      
       return User.create(newUser);
     })
     .then(result => {
@@ -182,14 +184,25 @@ app.post('/api/users', (req, res, next) => {
       if (err.code === 11000) {
         err = new Error('The username already exists');
         err.status = 400;
+        
       }
+      console.log(err);
+
       next(err);
     });
 
 })
 
 
-
+// Catch-all Error handler
+// Add NODE_ENV check to prevent stacktrace leak
+app.use(function (err, req, res, next) {
+  res.status(err.code || 500);
+  res.json({
+    message: err.message,
+    error: app.get('env') === 'development' ? err : {}
+  });
+});
 
 
 
