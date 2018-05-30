@@ -64,7 +64,9 @@ app.use(
 
 
 app.get('/api/users', (req, res, next) => {
-  return res.json(userList)
+  User.find()
+    .then(results => res.json(results))
+    .catch(err => next(err))
 });
 
 app.get('/api/users/:userName', (req, res, next) => {
@@ -83,8 +85,10 @@ app.get('/api/users/:userName', (req, res, next) => {
     });  
 });
 
-app.post('/api/users/register', (req, res, next) => {
-  const requiredFields = ['userName', 'password', 'userEmail'];
+app.post('/api/users', (req, res, next) => {
+  const requiredFields = ['userName', 'password'];
+  console.log('here it is',req.body);
+  
 
   const missingField = requiredFields.find(field => !(field in req.body));
 
@@ -94,7 +98,7 @@ app.post('/api/users/register', (req, res, next) => {
     return next(err);
   }
 
-  const stringFields = ['userName', 'password', 'userEmail'];
+  const stringFields = ['userName', 'password'];
   const nonStringField = stringFields.find(
     field => field in req.body && typeof req.body[field] !== 'string'
   );
@@ -108,7 +112,7 @@ app.post('/api/users/register', (req, res, next) => {
     });
   }
 
-  const trimmedFields = ['userName', 'password', 'userEmail'];
+  const trimmedFields = ['userName', 'password'];
   const nonTrimmedField = trimmedFields.find(
     field => req.body[field].trim() !== req.body[field]);
 
@@ -126,10 +130,6 @@ app.post('/api/users/register', (req, res, next) => {
     },
     password: {
       min: 8,
-      max: 72
-    },
-    userEmail: {
-      min : 6,
       max: 72
     }
   };
@@ -157,7 +157,7 @@ app.post('/api/users/register', (req, res, next) => {
     });
   }
 
-  let {userName, password, userEmail } = req.body;
+  let {userName, password, currentCash,} = req.body;
 
   return User.find({userName})
     .count()
@@ -172,11 +172,11 @@ app.post('/api/users/register', (req, res, next) => {
       }
     })
     .then(() => {
-      const newUser = {userName, password, userEmail};
+      const newUser = {userName, password, currentCash};
       return User.create(newUser);
     })
     .then(result => {
-      return res.status(201).location(`/api/users/${result.id}`).json(result);
+      return res.status(201).location(`/api/users/${result.userName}`).json(result);
     })
     .catch(err => {
       if (err.code === 11000) {

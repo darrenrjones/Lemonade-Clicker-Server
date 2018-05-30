@@ -4,35 +4,33 @@ const mongoose = require('mongoose');
 
 const userSchema = mongoose.Schema({
  
-	userName : {type: String, required: true },	
-	userEmail : {type: String, required: true},
+	userName : {type: String, required: true },
+	password: {type:String, required: true},	
 	currentCash : Number,
-	careerCash : String,
-	manualClicks : String,
+	careerCash : Number,
+	manualClicks : Number,
 	menuState : Boolean,
-	clickValue : String,
+	clickValue : Number,
 	signedIn : Boolean,
-	employees :{
-		name : String,
-		count : Number,
-		currentCost : Number,
-		employeeSpeed : Number
-	},
-	trucks : {
-		name : String,
-		count : Number,
-		currentCost : Number,
-		employeeSpeed : Number
-	},
-	planes : {
-		name : String,
-		count : Number,
-		currentCost : Number,
-		employeeSpeed : Number
+	assets: 
+	{
+		employees: Number,
+		trucks: Number,
+		planes: Number
 	},
 	loading : Boolean,
 	error : String	
 }
 );
+
+
+userSchema.set('toObject', {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+		delete ret.__v;
+		delete ret.password;
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);
