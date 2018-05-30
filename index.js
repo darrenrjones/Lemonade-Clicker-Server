@@ -86,9 +86,21 @@ app.get('/api/users/:userName', (req, res, next) => {
     });  
 });
 
+app.put('/api/users/:id', (req, res, next) => {
+  const { id } = req.params;
+    
+  User.findByIdAndUpdate(id, req.body, {new:true})
+    .then(user => {
+      if(!user) return res.sendStatus(404);
+      return res.json(user.toObject())
+    })
+    
+
+})
+
 app.post('/api/users', (req, res, next) => {
   const requiredFields = ['userName', 'password'];
-  console.log('here it is',req.body);
+  console.log('here is req.body: ',req.body);
   
 
   const missingField = requiredFields.find(field => !(field in req.body));
@@ -192,6 +204,8 @@ app.post('/api/users', (req, res, next) => {
     });
 
 })
+
+
 
 
 // Catch-all Error handler
