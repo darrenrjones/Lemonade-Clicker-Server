@@ -4,6 +4,13 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
+
+const WebSocket = require('ws');
+
+const ws = new WebSocket('ws://locahost:8042');
+
+
+
 const { PORT, CLIENT_ORIGIN } = require('./config');
 const { dbConnect } = require('./db-mongoose');
 // const {dbConnect} = require('./db-knex');
@@ -204,6 +211,22 @@ app.post('/api/users', (req, res, next) => {
     });
 
 })
+
+// wss.on('connection', function connection(ws) {
+//   ws.on('message', function incoming(message) {
+//     console.log('received: %s', message);
+//   });
+
+//   ws.send('something');
+// });
+
+ws.on('open', function open() {
+  ws.send('something');
+});
+
+ws.on('message', function incoming(data) {
+  console.log(data);
+});
 
 
 
