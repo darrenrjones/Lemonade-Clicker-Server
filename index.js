@@ -25,7 +25,7 @@ const app = express();
 
 const userList = [
   {
-  userName: "user2",
+  username: "user2",
   pwd: "abc12345",
   currentCash: 435,
   clickValue: 1,
@@ -36,7 +36,7 @@ const userList = [
   ]
 },
 {
-  userName: "user3",
+  username: "user3",
   pwd: "abc12345",
   currentCash: 1005,
   clickValue: 1,
@@ -47,7 +47,7 @@ const userList = [
   ]
 },
 {
-  userName: "user4",
+  username: "user4",
   pwd: "abc12345",
   currentCash: 435001455,
   clickValue: 4,
@@ -71,7 +71,7 @@ function createAuthToken (user) {
   console.log('entered creatAUthToken');
   
   return jwt.sign({ user }, JWT_SECRET, {
-    subject: user.userName,
+    subject: user.username,
     expiresIn: JWT_EXPIRY
   });
 }
@@ -112,7 +112,7 @@ app.post('/api/auth/login', localAuth, (req, res) => {
 //   console.log('GOT INTO POST IN ROUTER');
   
 
-//     User.findOne({userName: userName})
+//     User.findOne({username: username})
 //     .then(result => {
 //       console.log("RESULTS:", result);
       
@@ -147,7 +147,7 @@ app.put('/api/users/:id', (req, res, next) => {
 })
 
 app.post('/api/users/register', (req, res, next) => {
-  const requiredFields = ['userName', 'password'];
+  const requiredFields = ['username', 'password'];
   // console.log('here is req.body: ',req.body);
   
 
@@ -159,7 +159,7 @@ app.post('/api/users/register', (req, res, next) => {
     return next(err);
   }
 
-  const stringFields = ['userName', 'password'];
+  const stringFields = ['username', 'password'];
   const nonStringField = stringFields.find(
     field => field in req.body && typeof req.body[field] !== 'string'
   );
@@ -173,7 +173,7 @@ app.post('/api/users/register', (req, res, next) => {
     });
   }
 
-  const trimmedFields = ['userName', 'password'];
+  const trimmedFields = ['username', 'password'];
   const nonTrimmedField = trimmedFields.find(
     field => req.body[field].trim() !== req.body[field]);
 
@@ -186,7 +186,7 @@ app.post('/api/users/register', (req, res, next) => {
     });
   }
   const fieldSizes = {
-    userName: {
+    username: {
       min: 1
     },
     password: {
@@ -218,9 +218,9 @@ app.post('/api/users/register', (req, res, next) => {
     });
   }
 
-  let {userName, password, currentCash, careerCash, manualClicks, clickValue, assets} = req.body;
+  let {username, password, currentCash, careerCash, manualClicks, clickValue, assets} = req.body;
 
-  return User.find({userName})
+  return User.find({username})
     .count()
     .then(count => {
       if(count > 0) {
@@ -234,12 +234,12 @@ app.post('/api/users/register', (req, res, next) => {
       return User.hashPassword(password);
     })
     .then((digest) => {
-      const newUser = {userName, password: digest, currentCash, careerCash, manualClicks, clickValue, assets};
+      const newUser = {username, password: digest, currentCash, careerCash, manualClicks, clickValue, assets};
       
       return User.create(newUser);
     })
     .then(result => {
-      return res.status(201).location(`/api/users/${result.userName}`).json(result);
+      return res.status(201).location(`/api/users/${result.username}`).json(result);
     })
     .catch(err => {
       if (err.code === '11000') {
