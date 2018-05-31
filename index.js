@@ -1,14 +1,25 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
+const jwt = require('jsonwebtoken');
+
+const  { JWT_SECRET, JWT_EXPIRY } = require('./config');
 const { PORT, CLIENT_ORIGIN } = require('./config');
 const { dbConnect } = require('./db-mongoose');
-// const {dbConnect} = require('./db-knex');
+
+const passport = require('passport');
+const localStrategy = require('./passport/local');
+const jwtStrategy = require('./passport/jwt');
+
+
 
 const User = require('./models');
+
 
 const app = express();
 
@@ -48,20 +59,42 @@ const userList = [
 }
 ];
 
+//parse request body
 app.use(express.json());
+
+passport.use(localStrategy);
+passport.use(jwtStrategy);
+
+const options = {session: false, failWithError: true};
+
+function createAuthToken (user) {
+  console.log('entered creatAUthToken');
+  
+  return jwt.sign({ user }, JWT_SECRET, {
+    subject: user.userName,
+    expiresIn: JWT_EXPIRY
+  });
+}
+const localAuth = passport.authenticate('local', options);
 
 app.use(
   morgan(process.env.NODE_ENV === 'production' ? 'common' : 'dev', {
     skip: (req, res) => process.env.NODE_ENV === 'test'
   })
 );
-
 app.use(
   cors({
     origin: CLIENT_ORIGIN
   })
 );
 
+app.get('/api/users/:id', (req, res, next) => {
+  const { id } = req.params;
+  
+  User.findOne({ _id: id })
+    .then(user => res.json(user))
+    .catch(err => next(err))
+});
 
 app.get('/api/users', (req, res, next) => {
   User.find()
@@ -69,22 +102,37 @@ app.get('/api/users', (req, res, next) => {
     .catch(err => next(err))
 });
 
-app.get('/api/users/:userName', (req, res, next) => {
-  const { userName } = req.params;
-
-  User.findOne({userName: userName})
-    .then(result => {
-      if(result){
-        res.json(result);
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      
-    });  
+app.post('/api/auth/login', localAuth, (req, res) => {
+  console.log('entered post to /api/auth/login');
+  const authToken = createAuthToken(req.user);
+  res.json({ authToken });  
 });
+
+// app.post('/api/auth/login', localAuth, (req, res, next) => {
+//   console.log('GOT INTO POST IN ROUTER');
+  
+
+//     User.findOne({userName: userName})
+//     .then(result => {
+//       console.log("RESULTS:", result);
+      
+//       if(result){
+//         res.json(result);
+//       } else {
+//         next();
+//       }
+//     })
+//     .catch(err => {
+//      console.log(err);
+      
+//     });  
+ 
+
+  
+//   // const authToken = createAuthToken(req.user);
+//   // res.json({ authToken });  
+
+// });
 
 app.put('/api/users/:id', (req, res, next) => {
   const { id } = req.params;
@@ -98,9 +146,9 @@ app.put('/api/users/:id', (req, res, next) => {
 
 })
 
-app.post('/api/users', (req, res, next) => {
+app.post('/api/users/register', (req, res, next) => {
   const requiredFields = ['userName', 'password'];
-  console.log('here is req.body: ',req.body);
+  // console.log('here is req.body: ',req.body);
   
 
   const missingField = requiredFields.find(field => !(field in req.body));
@@ -183,9 +231,10 @@ app.post('/api/users', (req, res, next) => {
           location: 'username'
         });
       }
+      return User.hashPassword(password);
     })
-    .then(() => {
-      const newUser = {userName, password, currentCash, careerCash, manualClicks, clickValue, assets};
+    .then((digest) => {
+      const newUser = {userName, password: digest, currentCash, careerCash, manualClicks, clickValue, assets};
       
       return User.create(newUser);
     })
