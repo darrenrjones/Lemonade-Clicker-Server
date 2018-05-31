@@ -193,7 +193,7 @@ app.post('/api/users', (req, res, next) => {
       return res.status(201).location(`/api/users/${result.userName}`).json(result);
     })
     .catch(err => {
-      if (err.code === 11000) {
+      if (err.code === '11000') {
         err = new Error('The username already exists');
         err.status = 400;
         
