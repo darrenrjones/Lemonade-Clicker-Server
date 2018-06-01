@@ -23,41 +23,6 @@ const User = require('./models');
 
 const app = express();
 
-const userList = [
-  {
-  username: "user2",
-  pwd: "abc12345",
-  currentCash: 435,
-  clickValue: 1,
-  employees: [
-    {emp: 0},
-    {trucks: 0},
-    {planes: 0}
-  ]
-},
-{
-  username: "user3",
-  pwd: "abc12345",
-  currentCash: 1005,
-  clickValue: 1,
-  employees: [
-    {emp: 1},
-    {trucks: 0},
-    {planes: 0}
-  ]
-},
-{
-  username: "user4",
-  pwd: "abc12345",
-  currentCash: 435001455,
-  clickValue: 4,
-  employees: [
-    {emp: 5},
-    {trucks: 3},
-    {planes: 1}
-  ]
-}
-];
 
 //parse request body
 app.use(express.json());
@@ -88,10 +53,10 @@ app.use(
   })
 );
 
-app.get('/api/users/:id', (req, res, next) => {
-  const { id } = req.params;
+app.get('/api/users/:username', (req, res, next) => {
+  const { username } = req.params;
   
-  User.findOne({ _id: id })
+  User.findOne({ username })
     .then(user => res.json(user))
     .catch(err => next(err))
 });
@@ -103,7 +68,7 @@ app.get('/api/users', (req, res, next) => {
 });
 
 app.post('/api/auth/login', localAuth, (req, res) => {
-  console.log('entered post to /api/auth/login');
+  console.log('req.user: ', req.user.id);
   const authToken = createAuthToken(req.user);
   res.json({ authToken });  
 });
@@ -146,7 +111,7 @@ app.put('/api/users/:id', (req, res, next) => {
 
 })
 
-app.post('/api/users/register', (req, res, next) => {
+app.post('/api/users/register', (req, res, next) => { //can remove register part just /users
   const requiredFields = ['username', 'password'];
   // console.log('here is req.body: ',req.body);
   
@@ -242,12 +207,14 @@ app.post('/api/users/register', (req, res, next) => {
       return res.status(201).location(`/api/users/${result.username}`).json(result);
     })
     .catch(err => {
+      console.log('here is errorbefore 11000: ', err);
+      
       if (err.code === '11000') {
         err = new Error('The username already exists');
         err.status = 400;
         
       }
-      console.log(err);
+      console.log('HERE IS THE ERROR: ', err);
 
       next(err);
     });

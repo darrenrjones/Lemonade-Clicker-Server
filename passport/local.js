@@ -19,7 +19,10 @@ const localStrategy = new LocalStrategy((username, password, done) => {
           location: 'username'
         });
       }
+      console.log('password: ', password);
+
       return user.validatePassword(password);
+      
     })
     .then( isValid => {
       console.log("ISVALID: ",isValid);
@@ -33,10 +36,10 @@ const localStrategy = new LocalStrategy((username, password, done) => {
       }
       return done(null, user);
     })
-    .catch(err => {
-      console.log("error from local strategy: ", err);
-      
+    .catch(err => {      
       if (err.reason === 'LoginError') {
+        console.log('entered proper reason: ', err);
+        
         return done(null, false);
       }
       return done(err);
