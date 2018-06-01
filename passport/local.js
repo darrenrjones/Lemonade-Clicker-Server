@@ -38,7 +38,7 @@ const localStrategy = new LocalStrategy((username, password, done) => {
     })
     .catch(err => {      
       if (err.reason === 'LoginError') {
-        console.log('entered proper reason: ', err);
+        console.log('entered localStrategy err: ', err);
         
         return done(null, false);
       }

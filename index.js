@@ -183,7 +183,7 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     });
   }
 
-  let {username, password, currentCash, careerCash, manualClicks, clickValue, assets} = req.body;
+  let {username, password, currentCash, careerCash, manualClicks, clickValue, assets, seenMessage} = req.body;
 
   return User.find({username})
     .count()
@@ -199,7 +199,7 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
       return User.hashPassword(password);
     })
     .then((digest) => {
-      const newUser = {username, password: digest, currentCash, careerCash, manualClicks, clickValue, assets};
+      const newUser = {username, password: digest, currentCash, careerCash, manualClicks, clickValue, assets, seenMessage};
       
       return User.create(newUser);
     })
