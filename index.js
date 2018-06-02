@@ -2,6 +2,9 @@
 
 require('dotenv').config();
 
+var ws = require('./ws')
+
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -220,6 +223,16 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     });
 
 })
+
+
+app.get('/', function (req, res) {
+  res.sendFile(__dirname + '/ws.html');
+})
+
+app.listen(3000, function () {
+console.log('Example app listening on port 3000!')
+})
+
 
 
 
