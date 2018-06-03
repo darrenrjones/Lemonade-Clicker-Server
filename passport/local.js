@@ -12,6 +12,8 @@ const localStrategy = new LocalStrategy((username, password, done) => {
       console.log("results: ", results);
       
       user = results;
+      console.log("USER: ", user);
+      
       if (!user) {
         return Promise.reject({
           reason: 'LoginError',
@@ -33,14 +35,19 @@ const localStrategy = new LocalStrategy((username, password, done) => {
           message: 'Incorrect password',
           location: 'password'
         });
-      }
-      return done(null, user);
+      }      
     })
-    .catch(err => {      
+    .then(() => {      
+      
+      return done(null, user, { success: true });
+    })
+    .catch(err => { 
+      console.log('entered catch from local');
+           
       if (err.reason === 'LoginError') {
         console.log('entered localStrategy err: ', err);
         
-        return done(null, false);
+        return done(null, false, { success: false, message: err.message });
       }
       return done(err);
     });

@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 
-var ws = require('./ws')
+// var ws = require('./ws')
 
 
 const express = require('express');
@@ -33,7 +33,7 @@ app.use(express.json());
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
-const options = {session: false, failWithError: true};
+const options = {session:false, failWithError: true}
 
 function createAuthToken (user) {
   console.log('entered creatAUthToken');
@@ -43,7 +43,7 @@ function createAuthToken (user) {
     expiresIn: JWT_EXPIRY
   });
 }
-const localAuth = passport.authenticate('local', options);
+const localAuth = passport.authenticate('local', {session: false});
 
 app.use(
   morgan(process.env.NODE_ENV === 'production' ? 'common' : 'dev', {
@@ -55,6 +55,12 @@ app.use(
     origin: CLIENT_ORIGIN
   })
 );
+
+
+// use hwt strategy to protect endpoints
+// app.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
+
+//enpoints:
 
 app.get('/api/users/:username', (req, res, next) => {
   const { username } = req.params;
@@ -70,50 +76,50 @@ app.get('/api/users', (req, res, next) => {
     .catch(err => next(err))
 });
 
-app.post('/api/auth/login', localAuth, (req, res) => {
-  console.log('req.user: ', req.user.id);
-  const authToken = createAuthToken(req.user);
-  res.json({ authToken });  
+// app.post('/api/auth/login', localAuth, (req, res) => {
+//   console.log('req.user: ', req.user);
+//   const authToken = createAuthToken(req.user);
+//   console.log('AUTH TOKEN: ', authToken);
+  
+//   res.json({ authToken });  
+// });
+app.post('/api/auth/login', function(req, res, next) {
+  passport.authenticate('local', options, function(err,user,response){
+    console.log('RESPONSE from index.js: ', response);
+    
+    if (response.success){
+
+
+      const authToken = createAuthToken(user);
+      
+      console.log('AUTH TOKEN: ', authToken);
+      
+      res.json({ authToken });  
+    } else if (!response.success) {
+      res.status(401).json({
+        message: response.message
+      });
+    }
+  })(req,res,next);
 });
 
-// app.post('/api/auth/login', localAuth, (req, res, next) => {
-//   console.log('GOT INTO POST IN ROUTER');
-  
 
-//     User.findOne({username: username})
-//     .then(result => {
-//       console.log("RESULTS:", result);
-      
-//       if(result){
-//         res.json(result);
-//       } else {
-//         next();
-//       }
-//     })
-//     .catch(err => {
-//      console.log(err);
-      
-//     });  
- 
-
-  
-//   // const authToken = createAuthToken(req.user);
-//   // res.json({ authToken });  
-
-// });
-
+//save endpoint
 app.put('/api/users/:id', (req, res, next) => {
   const { id } = req.params;
-    
+
   User.findByIdAndUpdate(id, req.body, {new:true})
     .then(user => {
       if(!user) return res.sendStatus(404);
+      console.log('trying to update in findByIdAndUpdate');
+      
       return res.json(user.toObject())
     })
     
 
 })
 
+//register new user endpoint
 app.post('/api/users/register', (req, res, next) => { //can remove register part just /users
   const requiredFields = ['username', 'password'];
   // console.log('here is req.body: ',req.body);
@@ -203,6 +209,7 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     })
     .then((digest) => {
       const newUser = {username, password: digest, currentCash, careerCash, manualClicks, clickValue, assets, seenMessage};
+      console.log('username and pswrd from register',newUser.username, newUser.password);
       
       return User.create(newUser);
     })
@@ -225,13 +232,13 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
 })
 
 
-app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/ws.html');
-})
+// app.get('/', function (req, res) {
+//   res.sendFile(__dirname + '/ws.html');
+// })
 
-app.listen(3000, function () {
-console.log('Example app listening on port 3000!')
-})
+// app.listen(3000, function () {
+// console.log('Example app listening on port 3000!')
+// })
 
 
 
