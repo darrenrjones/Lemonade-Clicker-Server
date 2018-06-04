@@ -8,12 +8,8 @@ const localStrategy = new LocalStrategy((username, password, done) => {
   let user;
   
   User.findOne({ username })
-    .then(results => {
-      console.log("results: ", results);
-      
-      user = results;
-      console.log("USER: ", user);
-      
+    .then(results => {      
+      user = results;      
       if (!user) {
         return Promise.reject({
           reason: 'LoginError',
@@ -21,8 +17,6 @@ const localStrategy = new LocalStrategy((username, password, done) => {
           location: 'username'
         });
       }
-      console.log('password: ', password);
-
       return user.validatePassword(password);
       
     })

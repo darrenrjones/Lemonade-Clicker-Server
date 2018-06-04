@@ -36,7 +36,7 @@ passport.use(jwtStrategy);
 const options = {session:false, failWithError: true}
 
 function createAuthToken (user) {
-  console.log('entered creatAUthToken');
+  // console.log('entered creatAUthToken');
   
   return jwt.sign({ user }, JWT_SECRET, {
     subject: user.username,
@@ -85,17 +85,12 @@ app.get('/api/users', (req, res, next) => {
 // });
 app.post('/api/auth/login', function(req, res, next) {
   passport.authenticate('local', options, function(err,user,response){
-    console.log('RESPONSE from index.js: ', response);
     
     if (response.success){
-
-
-      const authToken = createAuthToken(user);
-      
-      console.log('AUTH TOKEN: ', authToken);
-      
+      const authToken = createAuthToken(user);      
+      console.log('AUTH TOKEN: ', authToken);      
       res.json({ authToken });  
-    } else if (!response.success) {
+    } else if (!response.success) {      
       res.status(401).json({
         message: response.message
       });
@@ -110,9 +105,7 @@ app.put('/api/users/:id', (req, res, next) => {
 
   User.findByIdAndUpdate(id, req.body, {new:true})
     .then(user => {
-      if(!user) return res.sendStatus(404);
-      console.log('trying to update in findByIdAndUpdate');
-      
+      if(!user) return res.sendStatus(404);      
       return res.json(user.toObject())
     })
     
@@ -128,6 +121,8 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
   const missingField = requiredFields.find(field => !(field in req.body));
 
   if (missingField) {
+    console.log('missing field found: ', missingField);
+    
     const err = new Error(`Missing '${missingField}' in request body`);
     err.status = 422;
     return next(err);
@@ -164,7 +159,7 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
       min: 1
     },
     password: {
-      min: 8,
+      min: 6,
       max: 72
     }
   };
@@ -209,8 +204,6 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     })
     .then((digest) => {
       const newUser = {username, password: digest, currentCash, careerCash, manualClicks, clickValue, assets, seenMessage};
-      console.log('username and pswrd from register',newUser.username, newUser.password);
-      
       return User.create(newUser);
     })
     .then(result => {
@@ -219,9 +212,10 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     .catch(err => {
       console.log('here is errorbefore 11000: ', err);
       
-      if (err.code === '11000') {
+      if (err.code === 11000) {
         err = new Error('The username already exists');
         err.status = 400;
+        console.log('caught 11000 username already exsts: ', err);
         
       }
       console.log('HERE IS THE ERROR: ', err);
