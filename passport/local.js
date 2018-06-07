@@ -21,7 +21,7 @@ const localStrategy = new LocalStrategy((username, password, done) => {
       
     })
     .then( isValid => {
-      console.log("ISVALID: ",isValid);
+      console.log('ISVALID: ',isValid);
       
       if (!isValid) {
         return Promise.reject({

@@ -7,22 +7,26 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = mongoose.Schema({
  
-	username : {type: String, required:true},
-	password: {type:String, required: true},	
-	currentCash : Number,
-	careerCash : Number,
-	manualClicks : Number,
-	menuState : Boolean,
-	clickValue : Number,
-	signedIn : Boolean,
-	assets: 
-	{
-		employees: Number,
-		trucks: Number,
-		planes: Number
-	},
-	loading : Boolean,
-	error : String	
+  username : {type: String, required:true},
+  password: {type:String, required: true},	
+  currentCash : Number,
+  careerCash : Number,
+  manualClicks : Number,
+  menuState : Boolean,
+  clickValue : Number,
+  signedIn : Boolean,
+  assets:	{
+    employees: Number,
+    trucks: Number,
+    planes: Number
+  },
+  upgrades: {
+    organic: false,
+    downtown: false,
+    newyork: false
+  },
+  loading : Boolean,
+  error : String	
 }
 );
 
@@ -31,8 +35,8 @@ userSchema.set('toObject', {
   transform: function (doc, ret) {
     ret.id = ret._id;
     delete ret._id;
-		delete ret.__v;
-		delete ret.password;
+    delete ret.__v;
+    delete ret.password;
   }
 });
 
