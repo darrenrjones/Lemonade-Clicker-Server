@@ -27,8 +27,7 @@ const userSchema = mongoose.Schema({
   },
   loading : Boolean,
   error : String	
-}
-);
+});
 
 
 userSchema.set('toObject', {
