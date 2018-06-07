@@ -1,9 +1,5 @@
 'use strict';
-
 require('dotenv').config();
-
-// var ws = require('./ws')
-
 
 const express = require('express');
 const cors = require('cors');
@@ -19,13 +15,9 @@ const passport = require('passport');
 const localStrategy = require('./passport/local');
 const jwtStrategy = require('./passport/jwt');
 
-
-
 const User = require('./models');
 
-
 const app = express();
-
 
 //parse request body
 app.use(express.json());
@@ -35,9 +27,7 @@ passport.use(jwtStrategy);
 
 const options = {session:false, failWithError: true}
 
-function createAuthToken (user) {
-  // console.log('entered creatAUthToken');
-  
+function createAuthToken (user) {  
   return jwt.sign({ user }, JWT_SECRET, {
     subject: user.username,
     expiresIn: JWT_EXPIRY
@@ -56,8 +46,6 @@ app.use(
   })
 );
 
-
-// use hwt strategy to protect endpoints
 // app.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 //enpoints:
@@ -76,19 +64,11 @@ app.get('/api/users', (req, res, next) => {
     .catch(err => next(err))
 });
 
-// app.post('/api/auth/login', localAuth, (req, res) => {
-//   console.log('req.user: ', req.user);
-//   const authToken = createAuthToken(req.user);
-//   console.log('AUTH TOKEN: ', authToken);
-  
-//   res.json({ authToken });  
-// });
 app.post('/api/auth/login', function(req, res, next) {
   passport.authenticate('local', options, function(err,user,response){
     
     if (response.success){
       const authToken = createAuthToken(user);      
-      console.log('AUTH TOKEN: ', authToken);      
       res.json({ authToken });  
     } else if (!response.success) {      
       res.status(401).json({
@@ -106,23 +86,19 @@ app.put('/api/users/:id', (req, res, next) => {
   User.findByIdAndUpdate(id, req.body, {new:true})
     .then(user => {
       if(!user) return res.sendStatus(404);      
-      return res.json(user.toObject())
-    })
+      return res.json(user.toObject());
+    });
     
 
-})
+});
 
 //register new user endpoint
 app.post('/api/users/register', (req, res, next) => { //can remove register part just /users
-  const requiredFields = ['username', 'password'];
-  // console.log('here is req.body: ',req.body);
-  
+  const requiredFields = ['username', 'password'];  
 
   const missingField = requiredFields.find(field => !(field in req.body));
 
-  if (missingField) {
-    console.log('missing field found: ', missingField);
-    
+  if (missingField) {    
     const err = new Error(`Missing '${missingField}' in request body`);
     err.status = 422;
     return next(err);
@@ -209,37 +185,17 @@ app.post('/api/users/register', (req, res, next) => { //can remove register part
     .then(result => {
       return res.status(201).location(`/api/users/${result.username}`).json(result);
     })
-    .catch(err => {
-      console.log('here is errorbefore 11000: ', err);
-      
+    .catch(err => {      
       if (err.code === 11000) {
         err = new Error('The username already exists');
-        err.status = 400;
-        console.log('caught 11000 username already exsts: ', err);
-        
+        err.status = 400;        
       }
-      console.log('HERE IS THE ERROR: ', err);
-
       next(err);
     });
 
-})
-
-
-// app.get('/', function (req, res) {
-//   res.sendFile(__dirname + '/ws.html');
-// })
-
-// app.listen(3000, function () {
-// console.log('Example app listening on port 3000!')
-// })
-
-
-
-
+});
 
 // Catch-all Error handler
-// Add NODE_ENV check to prevent stacktrace leak
 app.use(function (err, req, res, next) {
   res.status(err.code || 500);
   res.json({
@@ -247,8 +203,6 @@ app.use(function (err, req, res, next) {
     error: app.get('env') === 'development' ? err : {}
   });
 });
-
-
 
 function runServer(port = PORT) {
   const server = app
