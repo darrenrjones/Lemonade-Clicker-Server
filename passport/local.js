@@ -20,9 +20,7 @@ const localStrategy = new LocalStrategy((username, password, done) => {
       return user.validatePassword(password);
       
     })
-    .then( isValid => {
-      console.log('ISVALID: ',isValid);
-      
+    .then( isValid => {      
       if (!isValid) {
         return Promise.reject({
           reason: 'LoginError',
@@ -36,10 +34,10 @@ const localStrategy = new LocalStrategy((username, password, done) => {
       return done(null, user, { success: true });
     })
     .catch(err => { 
-      console.log('entered catch from local');
+      // console.log('entered catch from local');
            
       if (err.reason === 'LoginError') {
-        console.log('entered localStrategy err: ', err);
+        // console.log('entered localStrategy err: ', err);
         
         return done(null, false, { success: false, message: err.message });
       }
